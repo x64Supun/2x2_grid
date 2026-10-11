@@ -113,9 +113,51 @@ outgoing_edge = {
 
 #vehicles' inbound directions at an intersections and their distination directions
 
+# Movement ID -> departure side
 destinations = {
-    "NL": "E", "NT": "S", "NR": "W",
-    "WL": "N", "WT": "E", "WR": "S",
-    "SL": "W", "ST": "N", "SR": "E",
-    "EL": "S", "ET": "W", "ER": "N"
+    0: "E",    # WT
+    1: "N",    # WL
+    2: "W",    # NR
+    3: "S",    # NT
+    4: "E",    # NL
+    5: "N",    # ER
+    6: "W",    # ET
+    7: "S",    # EL
+    8: "E",    # SR
+    9: "N",    # ST
+    10: "W",   # SL
+    11: "S",   # WR
+}
+
+
+# Movement ID -> arrival side
+origins = {
+    0: "W",    # WT
+    1: "W",    # WL
+    2: "N",    # NR
+    3: "N",    # NT
+    4: "N",    # NL
+    5: "E",    # ER
+    6: "E",    # ET
+    7: "E",    # EL
+    8: "S",    # SR
+    9: "S",    # ST
+    10: "S",   # SL
+    11: "W",   # WR
+}
+
+# Movement ID -> turn type
+turns = {
+    0: "T",
+    1: "L",
+    2: "R",
+    3: "T",
+    4: "L",
+    5: "R",
+    6: "T",
+    7: "L",
+    8: "R",
+    9: "T",
+    10: "L",
+    11: "R",
 }

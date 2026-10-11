@@ -53,31 +53,38 @@ face_merge_tl = { #merge_TL
     "L": (face_64["L"][0], junction_l)
 }
 
-directions = ("NL", "NT", "NR", "EL", "ET", "ER", "SL", "ST", "SR", "WL", "WT", "WR")
+#directions = ("NL", "NT", "NR", "EL", "ET", "ER", "SL", "ST", "SR", "WL", "WT", "WR")
+directions = tuple(range(12))
 
-# movement speed cap for each possible movement
+
+#movement speed cap for each possible movement
 v_mov = {
     "I1": {
-        "NT": v_f, "ET": v_f, "ST": v_f, "WT": v_f,
-        "NL": v_left, "EL": v_left, "SL": v_left, "WL": v_left,
-        "NR": v_right, "ER": v_right, "SR": v_right, "WR": v_right,
+        0: v_f, 1: v_left, 2: v_right,
+        3: v_f, 4: v_left, 5: v_right,
+        6: v_f, 7: v_left, 8: v_right,
+        9: v_f, 10: v_left, 11: v_right,
     },
     "I2": {
-        "NT": v_f, "ET": v_f, "ST": v_f, "WT": v_f,
-        "NL": v_left, "EL": v_left, "SL": v_left, "WL": v_left,
-        "NR": v_right, "ER": v_right, "SR": v_right, "WR": v_right,
+        0: v_f, 1: v_left, 2: v_right,
+        3: v_f, 4: v_left, 5: v_right,
+        6: v_f, 7: v_left, 8: v_right,
+        9: v_f, 10: v_left, 11: v_right,
     },
     "I3": {
-        "NT": v_f, "ET": v_f, "ST": v_f, "WT": v_f,
-        "NL": v_left, "EL": v_left, "SL": v_left, "WL": v_left,
-        "NR": v_right, "ER": v_right, "SR": v_right, "WR": v_right,
+        0: v_f, 1: v_left, 2: v_right,
+        3: v_f, 4: v_left, 5: v_right,
+        6: v_f, 7: v_left, 8: v_right,
+        9: v_f, 10: v_left, 11: v_right,
     },
     "I4": {
-        "NT": v_f, "ET": v_f, "ST": v_f, "WT": v_f,
-        "NL": v_left, "EL": v_left, "SL": v_left, "WL": v_left,
-        "NR": v_right, "ER": v_right, "SR": v_right, "WR": v_right,
+        0: v_f, 1: v_left, 2: v_right,
+        3: v_f, 4: v_left, 5: v_right,
+        6: v_f, 7: v_left, 8: v_right,
+        9: v_f, 10: v_left, 11: v_right,
     },
 }
+
 
 arrival_buffer = {
     "I1": {"N": 0.0, "E": 0.0, "S": 0.0, "W": 0.0},

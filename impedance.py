@@ -37,13 +37,23 @@ value for the given pair of vehicles.
 r = first vehicle's movement
 s = second vehicle's movement
 """
-def group(r: str, s: str) -> str:
-    if r[0] == s[0]:
-        return "same_approach" # case 2
+def group(r: int, s: int) -> str:
+    origin_r = road.origins[r]
+    origin_s = road.origins[s]
+
+    turn_r = road.turns[r]
+    turn_s = road.turns[s]
+
+    if origin_r == origin_s:
+        return "same_approach"
+
+    pair = frozenset((turn_r, turn_s))
+
     if road.destinations[r] == road.destinations[s]:
-        return _merge[frozenset(r[1] + s[1])] # cases 7, 8, 9
-    opposite = (_origin[r[0]] - _origin[s[0]]) % 4 == 2
-    pair = frozenset(r[1] + s[1])
+        return _merge[pair]
+
+    opposite = (_origin[origin_r] - _origin[origin_s]) % 4 == 2
+    
     if pair == frozenset("T"):
         return "no" if opposite is True else "TT" # case 3 or no conflict TT
     elif pair == frozenset("L"):
@@ -60,7 +70,7 @@ each of the above paiwise interactions has  different entering and exiting dista
 following function determines the (exit_distance, entering_distance) for the movement pair (r, s)
 """
 
-def distance(r: str, s: str) -> str:
+def distance(r: int, s: int) -> tuple[float, float] | None:
     g = group(r, s)
     if g in ("no", "same_approach"):
         return None
@@ -70,8 +80,8 @@ def distance(r: str, s: str) -> str:
         conflict_box = settings.face_sb
     else:
         conflict_box = settings.face_64
-    _enter_r, exit_r = conflict_box[r[1]]
-    enter_s, _exit_s = conflict_box[s[1]]
+    _enter_r, exit_r = conflict_box[road.turns[r]]
+    enter_s, _exit_s = conflict_box[road.turns[s]]
     return (exit_r, enter_s)
 
 
@@ -97,10 +107,9 @@ def crossing_speed(v_down: float | None = None, v_mov: float | None = None, v_f:
 given an intersection and a direction, we need to find the edge, a vehicle will enter after crossing the said intersection
 ex: downstream_edge(I1, NT) = E11S
 """
-def downstream_edge(intersection_id: str, movement: str) -> str:
+def downstream_edge(intersection_id: str, movement: int) -> str:
     exit_direction = road.destinations[movement]
-    exit_edge_id = road.outgoing_edge[intersection_id][exit_direction]
-    return exit_edge_id
+    return road.outgoing_edge[intersection_id][exit_direction]
 
 
 
@@ -109,9 +118,11 @@ def downstream_edge(intersection_id: str, movement: str) -> str:
 to find the required movement speeed cap, we need to identify a movement by its incoming and outgoing edges, w.r.t. a intersection
 ex; function(I1, E0E, E8E) = WT
 """
-def movement_from_edges(intersection_id: str, incoming_edge: str, outgoing_edge: str) -> str:
+def movement_from_edges(intersection_id: str, incoming_edge: str, outgoing_edge: str) -> int:
+
     if road.edges[incoming_edge][1] != intersection_id:
         raise ValueError(f"{incoming_edge} does not end at {intersection_id}")
+    
     if road.edges[outgoing_edge][0] != intersection_id:
         raise ValueError(f"{outgoing_edge} does not begin at {intersection_id}")
 
@@ -120,7 +131,7 @@ def movement_from_edges(intersection_id: str, incoming_edge: str, outgoing_edge:
     approach = opposite[travel_direction]
 
     for movement in settings.directions:
-        if movement[0] == approach:
+        if road.origins[movement] == approach:
             if downstream_edge(intersection_id, movement) == outgoing_edge:
                 return movement
 
@@ -133,7 +144,7 @@ will calculate all crossing speeds for all intersections
 ex: funciton(I1, E0E, E11S) = min()
 will store all speeds as dict{intersection_id, dict{direction, crossing_speed}}
 """
-def network_movement_speeds(edge_speeds: dict[str, float | None] | None = None) -> dict[str, dict[str, float]]:
+def network_movement_speeds(edge_speeds: dict[str, float | None] | None = None) -> dict[str, dict[int, float]]:
     if edge_speeds is None:
         edge_speeds = {}
 
@@ -162,7 +173,7 @@ there are three possible impedance value calculations
 
 this function is independent of intersection IDs.
 """
-def pair_seconds(first: str, second: str, v_first: float, v_second: float | None = None) -> float:
+def pair_seconds(first: int, second: int, v_first: float, v_second: float | None = None) -> float:
     v_r = _speed(v_first)
     v_s = _speed(v_first if v_second is None else v_second)
 
@@ -220,7 +231,7 @@ def default_edge_speeds() -> dict[str, float]:
 once we have the machinery to calculate the impedance value for any movement pair at any intersection, we have assemble the impedance matrices for all available intersections
 this calculates all 144 impedances at each intersection and return the four matrices
 """
-def update_impedances(edge_speeds: dict[str, float]) -> dict[str, dict[str, dict[str, float]]]:
+def update_impedances(edge_speeds: dict[str, float]) -> dict[str, dict[int, dict[int, float]]]:
     network_speeds = network_movement_speeds(edge_speeds)
     impedances = {}
 
@@ -239,7 +250,7 @@ def update_impedances(edge_speeds: dict[str, float]) -> dict[str, dict[str, dict
                     speeds[second],
                 )
                 if group(first, second) != "no":
-                    second_approach = second[0]
+                    second_approach = road.origins[second]
                     exit_direction = road.destinations[second]
                     gap += settings.arrival_buffer[intersection_id][second_approach]
                     gap += settings.departure_buffer[intersection_id][exit_direction]
@@ -260,7 +271,7 @@ if __name__ == "__main__":
 
     
     test_cases = [
-        ("I1", "EL", "NR"),
+        ("I1", 7, 2),
     
     ]
 
@@ -274,7 +285,7 @@ if __name__ == "__main__":
             print(f"v_down for {movement}: ", edge_speeds[edge])
             print(f"v_mov for {movement}: ", settings.v_mov[intersection][movement])
             print(f"crossing speed for {movement}: ", speeds[intersection][movement])
-            print(impedances[intersection][first][second])
+        print(impedances[intersection][first][second])
 
     """
     for intersection_id in ["I1"]:
