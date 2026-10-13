@@ -111,7 +111,7 @@ outgoing_edge = {
     },
 }
 
-#vehicles' inbound directions at an intersections and their distination directions
+
 
 # Movement ID -> departure side
 destinations = {
@@ -160,4 +160,11 @@ turns = {
     9: "T",
     10: "L",
     11: "R",
+}
+
+# intersection crossing distances
+junction_distances = {
+    "T": settings.junction_t,
+    "L": settings.junction_l,
+    "R": settings.junction_r,
 }

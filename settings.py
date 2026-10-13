@@ -11,7 +11,7 @@ accel = 2.5
 decel = 4.5
 min_v = 0.1
 
-big_m = 100000
+big_m = 100.0
 
 
 link_m = 500.0 # length of a link

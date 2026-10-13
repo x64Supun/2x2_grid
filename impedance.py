@@ -287,7 +287,7 @@ if __name__ == "__main__":
             print(f"crossing speed for {movement}: ", speeds[intersection][movement])
         print(impedances[intersection][first][second])
 
-    """
+
     for intersection_id in ["I1"]:
         print(f"\n Impedance matrx for {intersection_id}")
         print("Rows: first movement; Columns: second movement")
@@ -306,4 +306,3 @@ if __name__ == "__main__":
 
             print()
     
-"""
