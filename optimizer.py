@@ -50,8 +50,13 @@ def schedule_arrivals(vehicles: list[dict], t_now: float, edge_speeds: dict[str,
     if not vehicles:
         return {}
 
+    """
+    when the function is called, these two lines will calculate and store speeds and impedances for this run
+    """
     crossing_speeds = impedance.network_movement_speeds(edge_speeds)
     impedances = impedance.update_impedances(edge_speeds)
+    
+
 
     # create the model
     model = gp.Model("arrival_scheduler")
@@ -63,6 +68,7 @@ def schedule_arrivals(vehicles: list[dict], t_now: float, edge_speeds: dict[str,
     for vehicle in vehicles:
         vehicle_id = vehicle["id"]
 
+        # add arrival times as variables
         for intersection_id in vehicle["path"]:
             T[vehicle_id, intersection_id] = model.addVar(lb = 0.0, vtype = GRB.CONTINUOUS, name = f"T_{vehicle_id}_{intersection_id}")
 
@@ -73,6 +79,7 @@ def schedule_arrivals(vehicles: list[dict], t_now: float, edge_speeds: dict[str,
         frozen_times = vehicle.get("frozen", {})
 
         if next_intersection not in frozen_times:
+            # calculates earliest arrival times for the next intersection
             earliest_arrival = (t_now + vehicle["distance_to_next"] / settings.v_f)
 
             # constraint 1: earliest arrival to the next intersection
@@ -93,7 +100,7 @@ def schedule_arrivals(vehicles: list[dict], t_now: float, edge_speeds: dict[str,
 
 
 
-    # Travel between consecutive intersections.
+    # Travel between consecutive intersections - link propagation
     for vehicle in vehicles:
         vehicle_id = vehicle["id"]
         path = vehicle["path"]
@@ -142,6 +149,7 @@ def schedule_arrivals(vehicles: list[dict], t_now: float, edge_speeds: dict[str,
             leader_id = leader["id"]
             follower_id = follower["id"]
             intersection_id = leader["path"][0]
+            
             # constraint 3: preserve the same-lane arrival time order
             model.addConstr(T[leader_id, intersection_id] <= T[follower_id, intersection_id], name = f"lane_order_{leader_id}_{follower_id}_{intersection_id}")
 
