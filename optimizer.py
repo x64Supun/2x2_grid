@@ -260,54 +260,149 @@ if __name__ == "__main__":
     impedances = impedance.update_impedances(edge_speeds)
 
     vehicles = [
+        # I1 from West: leader at 20 m, follower at 40 m.
         {
             "id": 0,
             "path": ["I1", "I2"],
             "movements": {"I1": 0, "I2": 0},
-            "distance_to_next": 120.0,
+            "distance_to_next": 20.0,
             "incoming_edge": "E0E",
             "frozen": {}
         },
         {
             "id": 1,
+            "path": ["I1", "I2"],
+            "movements": {"I1": 0, "I2": 0},
+            "distance_to_next": 40.0,
+            "incoming_edge": "E0E",
+            "frozen": {}
+        },
+
+        # I1 from North: leader at 20 m, follower at 40 m.
+        {
+            "id": 2,
             "path": ["I1", "I4"],
             "movements": {"I1": 3, "I4": 3},
-            "distance_to_next": 150.0,
+            "distance_to_next": 20.0,
             "incoming_edge": "E1S",
             "frozen": {}
         },
         {
-            "id": 2,
+            "id": 3,
+            "path": ["I1", "I4"],
+            "movements": {"I1": 3, "I4": 3},
+            "distance_to_next": 40.0,
+            "incoming_edge": "E1S",
+            "frozen": {}
+        },
+
+        # I2 from North: leader at 20 m, follower at 40 m.
+        {
+            "id": 4,
             "path": ["I2", "I3"],
-            "movements": {"I2":3, "I3": 3},
-            "distance_to_next": 300.0,
+            "movements": {"I2": 3, "I3": 3},
+            "distance_to_next": 20.0,
             "incoming_edge": "E2S",
             "frozen": {}
         },
         {
-            "id": 3,
-            "path": ["I1", "I2"],
-            "movements": {"I1": 0, "I2": 0},
-            "distance_to_next": 150.0,
-            "incoming_edge": "E0E",
-            "frozen": {},
+            "id": 5,
+            "path": ["I2", "I3"],
+            "movements": {"I2": 3, "I3": 3},
+            "distance_to_next": 40.0,
+            "incoming_edge": "E2S",
+            "frozen": {}
+        },
+
+        # I2 from East: leader at 20 m, follower at 40 m.
+        {
+            "id": 6,
+            "path": ["I2", "I1"],
+            "movements": {"I2": 6, "I1": 6},
+            "distance_to_next": 20.0,
+            "incoming_edge": "E3W",
+            "frozen": {}
         },
         {
-            "id": 4,
-            "path": ["I1", "I2"],
-            "movements": {"I1": 0, "I2": 0},
-            "distance_to_next": 180.0,
-            "incoming_edge": "E0E",
-            "frozen": {},
-        }, 
+            "id": 7,
+            "path": ["I2", "I1"],
+            "movements": {"I2": 6, "I1": 6},
+            "distance_to_next": 40.0,
+            "incoming_edge": "E3W",
+            "frozen": {}
+        },
+
+        # I3 from East: leader at 20 m, follower at 40 m.
         {
-            "id": 5,
+            "id": 8,
+            "path": ["I3", "I4"],
+            "movements": {"I3": 6, "I4": 6},
+            "distance_to_next": 20.0,
+            "incoming_edge": "E4W",
+            "frozen": {}
+        },
+        {
+            "id": 9,
+            "path": ["I3", "I4"],
+            "movements": {"I3": 6, "I4": 6},
+            "distance_to_next": 40.0,
+            "incoming_edge": "E4W",
+            "frozen": {}
+        },
+
+        # I3 from South: leader at 20 m, follower at 40 m.
+        {
+            "id": 10,
+            "path": ["I3", "I2"],
+            "movements": {"I3": 9, "I2": 9},
+            "distance_to_next": 20.0,
+            "incoming_edge": "E5N",
+            "frozen": {}
+        },
+        {
+            "id": 11,
+            "path": ["I3", "I2"],
+            "movements": {"I3": 9, "I2": 9},
+            "distance_to_next": 40.0,
+            "incoming_edge": "E5N",
+            "frozen": {}
+        },
+
+        # I4 from South: leader at 20 m, follower at 40 m.
+        {
+            "id": 12,
+            "path": ["I4", "I1"],
+            "movements": {"I4": 9, "I1": 9},
+            "distance_to_next": 20.0,
+            "incoming_edge": "E6N",
+            "frozen": {}
+        },
+        {
+            "id": 13,
+            "path": ["I4", "I1"],
+            "movements": {"I4": 9, "I1": 9},
+            "distance_to_next": 40.0,
+            "incoming_edge": "E6N",
+            "frozen": {}
+        },
+
+        # I4 from West: leader at 20 m, follower at 40 m.
+        {
+            "id": 14,
             "path": ["I4", "I3"],
             "movements": {"I4": 0, "I3": 0},
-            "distance_to_next": 200.0,
+            "distance_to_next": 20.0,
             "incoming_edge": "E7E",
-            "frozen": {},
-        },    
+            "frozen": {}
+        },
+        {
+            "id": 15,
+            "path": ["I4", "I3"],
+            "movements": {"I4": 0, "I3": 0},
+            "distance_to_next": 40.0,
+            "incoming_edge": "E7E",
+            "frozen": {}
+        },
     ]
 
     schedule = schedule_arrivals(vehicles = vehicles, t_now = 0.0, edge_speeds = edge_speeds)
@@ -328,6 +423,6 @@ if __name__ == "__main__":
         print(f"\n{intersection_id}: ")
 
         for arrival_time, vehicle_id in sorted(arrivals_here):
-            print(f"vehicle {vehicle_id}: {arrival_time:.1f} seconds")
+            print(f"vehicle {vehicle_id}: {arrival_time:.2f} seconds")
 
     #print(f"arrivals for vehicle id 0: ", schedule[0])
