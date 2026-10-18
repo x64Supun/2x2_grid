@@ -65,6 +65,54 @@ def group(r: int, s: int) -> str:
 
 
 
+def lane_group(first: tuple[int, int, int], second: tuple[int, int, int]) -> str:
+    first_movement, first_in_lane, first_out_lane = first
+    second_movement, second_in_lane, second_out_lane = second
+
+    first_origin = road.origins[first_movement]
+    second_origin = road.origins[second_movement]
+
+    first_destination = road.destinations[first_movement]
+    second_destination = road.destinations[second_movement]
+
+    first_turn = road.turns[first_movement]
+    second_turn = road.turns[second_movement]
+
+    # vehicles approaching in the same physical lane.
+    if (
+        first_origin == second_origin
+        and first_in_lane == second_in_lane
+    ):
+        return "same_approach"
+
+    # same approach but different lanes.
+    if first_origin == second_origin:
+        turn_order = {"R": 0, "T": 1, "L": 2}
+
+        if first_in_lane < second_in_lane:
+            outer_turn = first_turn
+            inner_turn = second_turn
+        else:
+            outer_turn = second_turn
+            inner_turn = first_turn
+
+        if turn_order[outer_turn] > turn_order[inner_turn]:
+            return "lane_cross"
+
+        return "no"
+
+    # they merge only when they enter the same outgoing lane.
+    if (
+        first_destination == second_destination
+        and first_out_lane == second_out_lane
+    ):
+        pair = frozenset((first_turn, second_turn))
+        return _merge[pair]
+
+    # use the existing interaction rules for different approaches.
+    return group(first_movement, second_movement)
+
+
 """
 each of the above paiwise interactions has  different entering and exiting distances
 following function determines the (exit_distance, entering_distance) for the movement pair (r, s)
@@ -84,6 +132,35 @@ def distance(r: int, s: int) -> tuple[float, float] | None:
     enter_s, _exit_s = conflict_box[road.turns[s]]
     return (exit_r, enter_s)
 
+
+"""
+returns (first_exit_distance, second_entry_distance).
+
+Each lane movement has the structure: (movement_id, incoming_lane, outgoing_lane)
+"""
+def lane_distance(first: tuple[int, int, int], second: tuple[int, int, int]) -> tuple[float, float] | None:
+    
+    first_movement, first_lane, _first_out_lane = first
+    second_movement, second_lane, _second_out_lane = second
+
+    interaction = lane_group(first, second)
+
+    if interaction in ("no", "same_approach"):
+        return None
+    if interaction == "merge_TL":
+        faces = settings.face_merge_tl_by_lane
+    elif interaction in ("merge_TR", "merge_LR"):
+        faces = settings.face_sb_by_lane
+    else:
+        faces = settings.face_main_by_lane
+
+    first_turn = road.turns[first_movement]
+    second_turn = road.turns[second_movement]
+
+    _first_enter, first_exit = faces[first_lane][first_turn]
+    second_enter, _second_exit = faces[second_lane][second_turn]
+
+    return first_exit, second_enter
 
 
 """
@@ -164,6 +241,35 @@ def network_movement_speeds(edge_speeds: dict[str, float | None] | None = None) 
     return network_speeds
 
 
+
+def network_lane_movement_speeds(edge_lane_speeds: dict[tuple[str, int], float | None] | None = None) -> dict[str, dict[tuple[int, int, int], float]]:
+
+    if edge_lane_speeds is None:
+        edge_lane_speeds = {}
+
+    network_speeds = {}
+
+    for intersection_id in road.intersections:
+        speeds = {}
+
+        for lane_movement in road.lane_movements:
+            movement_id, _incoming_lane, outgoing_lane = lane_movement
+
+            edge_id = downstream_edge(intersection_id, movement_id)
+
+            v_down = edge_lane_speeds.get(
+                (edge_id, outgoing_lane)
+            )
+
+            v_mov = settings.v_mov[intersection_id][movement_id]
+
+            speeds[lane_movement] = crossing_speed(v_down, v_mov, settings.v_f)
+
+        network_speeds[intersection_id] = speeds
+
+    return network_speeds
+
+
 """
 given a pair of movements, we can calculate the required impedance once we have all the required information like the distances and speeds
 there are three possible impedance value calculations
@@ -185,6 +291,27 @@ def pair_seconds(first: int, second: int, v_first: float, v_second: float | None
     else:
         dist_exit, dist_enter = distance(first, second)
         return max(0.0, (dist_exit + settings.length_veh)/ v_r - dist_enter / v_s + settings.delta)
+
+
+
+
+def lane_pair_seconds(first: tuple[int, int, int], second: tuple[int, int, int], v_first: float, v_second: float | None = None) -> float:
+    v_r = _speed(v_first)
+    v_s = _speed(v_first if v_second is None else v_second)
+
+    interaction = lane_group(first, second)
+
+    if interaction == "no":
+        return 0.0
+
+    if interaction == "same_approach":
+        return max(0.0, settings.tau + settings.length_veh / v_r + settings.delta)
+
+    dist_exit, dist_enter = lane_distance(first, second)
+
+    return max(0.0, (dist_exit + settings.length_veh) / v_r - dist_enter / v_s + settings.delta)
+
+
 
 
 """
@@ -227,6 +354,33 @@ def default_edge_speeds() -> dict[str, float]:
 
 
 
+
+def default_edge_lane_speeds() -> dict[tuple[str, int], float]:
+    edge_lane_speeds = {}
+
+    # give every downstream lane the free-flow speed.
+    for edge_id, (start_node, _end_node) in road.edges.items():
+        if start_node in road.intersections:
+            for lane_id in road.edge_lanes[edge_id]:
+                edge_lane_speeds[(edge_id, lane_id)] = settings.v_f
+
+    # temporary lane-specific test values.
+    test_v_down = {
+        ("E8E", 0): settings.v_f,
+        ("E8E", 1): settings.v_f,
+    }
+
+    # override the default values with the test values.
+    for edge_lane, speed in test_v_down.items():
+        if edge_lane not in edge_lane_speeds:
+            raise ValueError(f"Unknown downstream edge and lane: {edge_lane}")
+
+        edge_lane_speeds[edge_lane] = speed
+
+    return edge_lane_speeds
+
+
+
 """
 once we have the machinery to calculate the impedance value for any movement pair at any intersection, we have assemble the impedance matrices for all available intersections
 this calculates all 144 impedances at each intersection and return the four matrices
@@ -262,47 +416,96 @@ def update_impedances(edge_speeds: dict[str, float]) -> dict[str, dict[int, dict
 
 
 
+def update_lane_impedances(edge_lane_speeds: dict[tuple[str, int], float]) -> dict[str, dict[tuple[int, int, int], dict[tuple[int, int, int], float]]]:
+    network_speeds = network_lane_movement_speeds(edge_lane_speeds)
+
+    impedances = {}
+
+    for intersection_id in road.intersections:
+        speeds = network_speeds[intersection_id]
+        impedances[intersection_id] = {}
+
+        for first in road.lane_movements:
+            impedances[intersection_id][first] = {}
+
+            for second in road.lane_movements:
+                gap = lane_pair_seconds(first, second, speeds[first], speeds[second])
+
+                if lane_group(first, second) != "no":
+                    second_movement = second[0]
+
+                    second_approach = road.origins[second_movement]
+
+                    exit_direction = road.destinations[second_movement]
+
+                    gap += settings.arrival_buffer[intersection_id][second_approach]
+
+                    gap += settings.departure_buffer[intersection_id][exit_direction]
+
+                impedances[intersection_id][first][second] = gap
+
+    return impedances
+
+
+
+
 if __name__ == "__main__":
 
-    edge_speeds = default_edge_speeds()
-    impedances = update_impedances(edge_speeds)
-    speeds = network_movement_speeds(edge_speeds)
+    edge_lane_speeds = default_edge_lane_speeds()
+    lane_speeds = network_lane_movement_speeds(edge_lane_speeds)
+    lane_impedances = update_lane_impedances(edge_lane_speeds)
 
-
-    
     test_cases = [
-        ("I1", 7, 2),
-    
+        ( # (movement_id, incoming_lane, outgoing_lane)
+            "I1", 
+            (0, 0, 0),  # WT, lane 0
+            (3, 0, 0),  # NT, lane 0
+        ),
     ]
 
-    for intersection, first, second in test_cases:
-        print("\nGroup: ", group(first, second))
-        print("\nDistances: ", distance(first, second))
-    
-        for movement in (first, second):
-            edge = downstream_edge(intersection, movement)
-            print(f"downstream edge for {movement}: ", edge)
-            print(f"v_down for {movement}: ", edge_speeds[edge])
-            print(f"v_mov for {movement}: ", settings.v_mov[intersection][movement])
-            print(f"crossing speed for {movement}: ", speeds[intersection][movement])
-        print(impedances[intersection][first][second])
+    for intersection_id, first, second in test_cases:
+        print(f"\nIntersection: {intersection_id}")
+        print("First lane movement:", first)
+        print("Second lane movement:", second)
+        print("Group:", lane_group(first, second))
+        print("Distances:", lane_distance(first, second))
 
+        for lane_movement in (first, second):
+            movement_id, _incoming_lane, outgoing_lane = lane_movement
+            edge_id = downstream_edge(intersection_id, movement_id)
+            edge_lane = (edge_id, outgoing_lane)
+
+            print(f"\nLane movement: {lane_movement}")
+            print("Downstream edge and lane:", edge_lane)
+            print("Downstream speed:", edge_lane_speeds[edge_lane])
+            print(
+                "Movement speed cap:",
+                settings.v_mov[intersection_id][movement_id],
+            )
+            print(
+                "Crossing speed:",
+                lane_speeds[intersection_id][lane_movement],
+            )
+
+        print(
+            "\nImpedance:",
+            lane_impedances[intersection_id][first][second],
+        )
 
     for intersection_id in ["I1"]:
-        print(f"\n Impedance matrx for {intersection_id}")
-        print("Rows: first movement; Columns: second movement")
+        print(f"\nImpedance matrix for {intersection_id}")
+        print("Rows: first lane movement; columns: second lane movement")
 
-        print(f"{'':>8}", end = "")
-        for second in settings.directions:
-            print(f"{second:>8}", end = "")
+        print(f"{'':>14}", end="")
+        for second in road.lane_movements:
+            print(f"{str(second):>14}", end="")
         print()
 
-        for first in settings.directions:
-            print(f"{first:>8}", end = "")
+        for first in road.lane_movements:
+            print(f"{str(first):>14}", end="")
 
-            for second in settings.directions:
-                gap = impedances[intersection_id][first][second]
-                print(f"{gap:>8.2f}", end = "")
+            for second in road.lane_movements:
+                gap = lane_impedances[intersection_id][first][second]
+                print(f"{gap:>14.2f}", end="")
 
             print()
-    

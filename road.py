@@ -41,8 +41,12 @@ nodes = {
 
 
 """
-each node is connected with two bi-directional lanes.
-dictionary structure is edge_name: (starting_node, ending_node)
+each entry represents one directed road edge.
+dictionary structure is edge_id: (starting_node, ending_node)
+
+each directed egde has two lanes:
+lane 0 = righmost/outer lane
+lane 1 = leftmost/inner lane
 """
 edges = {
     "E0E": ("J0", "I1"), "E0W": ("I1", "J0"),
@@ -58,6 +62,19 @@ edges = {
     "E10E": ("I4", "I3"), "E10W": ("I3", "I4"),
     "E11N": ("I4", "I1"), "E11S": ("I1", "I4"),
 }
+
+"""
+from the driver's point of view, the rightmost lane in the direction of travel is lane 0, next lane is lane 1
+"""
+lane_ids = tuple(range(settings.number_of_lanes))
+
+right_lane = lane_ids[0]
+left_lane = lane_ids[-1]
+
+
+edge_lanes = {edge_id: lane_ids for edge_id in edges}
+
+
 
 # entry points and the connected edges
 entry_edge = {
@@ -81,6 +98,34 @@ exit_edge = {
     "J5": "E5S",
     "J6": "E6S",
     "J7": "E7W",
+}
+
+# incoming edge from each approach at each intersection
+incoming_edge = {
+    "I1": {
+        "N": "E1S",
+        "E": "E8W",
+        "S": "E11N",
+        "W": "E0E",
+    },
+    "I2": {
+        "N": "E2S",
+        "E": "E3W",
+        "S": "E9N",
+        "W": "E8E",
+    },
+    "I3": {
+        "N": "E9S",
+        "E": "E4W",
+        "S": "E5N",
+        "W": "E10E",
+    },
+    "I4": {
+        "N": "E11S",
+        "E": "E10W",
+        "S": "E6N",
+        "W": "E7E",
+    },
 }
 
 # outbound edges at each intersection
@@ -161,6 +206,43 @@ turns = {
     10: "L",
     11: "R",
 }
+
+"""
+until we figure out logic with lane changes, movements will be restricted to through "T" movements
+"""
+# movement IDs that represent through movements.
+through_movements = tuple(movement_id for movement_id in settings.directions if turns[movement_id] == "T")
+
+# two lane versions of every through movement.
+lane_movements = tuple((movement_id, lane_id, lane_id) for movement_id in through_movements for lane_id in lane_ids)
+
+
+
+def lane_junction_distance(movement_id: int, lane_id: int) -> float:
+    """
+    return the complete distance traveled through an intersection.
+
+    movement_id identifies the through, left, or right movement.
+    lane_id identifies the trajectory used by that movement.
+    """
+    if movement_id not in turns:
+        raise ValueError(f"Unknown movement: {movement_id}")
+
+    if lane_id not in lane_ids:
+        raise ValueError(f"Unknown lane: {lane_id}")
+
+    turn = turns[movement_id]
+
+    if turn == "T":
+        return settings.junction_t
+    elif turn == "L":
+        return settings.junction_l_by_lane[lane_id]
+    elif turn == "R":
+        return settings.junction_r_by_lane[lane_id]
+
+    raise ValueError(f"Unknown turn type: {turn}")
+    
+
 
 # intersection crossing distances
 junction_distances = {
