@@ -208,9 +208,9 @@ turns = {
 }
 
 """
-until we figure out logic with lane changes, movements will be restricted to through "T" movements
+until lane change logic is cleared, movements will be restricted to through "T" movements
 """
-# movement IDs that represent through movements.
+# movement IDs that represent through movements; 0, 3, 6, 9
 through_movements = tuple(movement_id for movement_id in settings.directions if turns[movement_id] == "T")
 
 # two lane versions of every through movement.
@@ -241,12 +241,3 @@ def lane_junction_distance(movement_id: int, lane_id: int) -> float:
         return settings.junction_r_by_lane[lane_id]
 
     raise ValueError(f"Unknown turn type: {turn}")
-    
-
-
-# intersection crossing distances
-junction_distances = {
-    "T": settings.junction_t,
-    "L": settings.junction_l,
-    "R": settings.junction_r,
-}

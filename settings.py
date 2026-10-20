@@ -22,11 +22,7 @@ setback = 4.0 # distance from the stop bar to the middle conflict box
 junction_m = box + 2 * setback # 20.8, intersection square dimension
 spacing = link_m + junction_m # 520.8, distance between the center points of two consecutive intersections
 stub = link_m + (junction_m / 2.0) # 510.4, distance from a J0-J7 node to a connecting intersection's center point
-r_left = (junction_m + lane_width) / 2.0 # 8.8, left turn radius
-r_right = (junction_m - lane_width) / 2.0 # 5.6, right turn radius
 junction_t = junction_m # junction through distance
-junction_l = math.pi * r_left / 2.0
-junction_r = math.pi * r_right / 2.0
 
 
 r_right_by_lane = {
@@ -57,37 +53,9 @@ junction_l_by_lane = {
 
 
 """
-distances second and first vehicles have to travel in order to enter and exit the conflict box
-There are two different conflict boxes depending on the possible movement pairs
-1. the middle square of 12.8m
-2. the rectangle in between the above square and the stop bar, because a movement pair like (NT, WR) do not meet inside the above square.
-"""
-
-# (entering, exiting) distances for the 6.4m square conflict box
-face_64 = {"T": (setback, setback + box), # remaining relationships except no and same approach
-            "L": (r_left * math.asin(setback / r_left),
-                  r_left * math.acos(setback / r_left)),
-}
-
- 
-face_sb = { # merge_TR, merge_LR
-    "T": (setback + box, junction_t),
-    "L": (r_left * math.acos(setback / r_left), junction_l),
-    "R": (r_right * math.asin(setback / r_right), junction_r),
-}
-
-
-face_merge_tl = { #merge_TL
-    "T": (face_64["T"][0], junction_t),
-    "L": (face_64["L"][0], junction_l)
-}
-
-"""
 lane-specific entry and exit distances.
 
-Structure:
-face_name_by_lane[lane_id][turn_type]
-    -> (enter_distance, exit_distance)
+structure: face_name_by_lane[lane_id][turn_type] -> (enter_distance, exit_distance)
 """
 
 face_main_by_lane = {}
@@ -104,40 +72,33 @@ for lane_id in range(number_of_lanes):
     # middle 12.8 m conflict square
     face_main_by_lane[lane_id] = {
         "T": (
-            setback,
-            setback + box,
+            setback, setback + box,
         ),
         "L": (
-            left_radius * math.asin(setback / left_radius),
-            left_radius * math.acos(setback / left_radius),
+            left_radius * math.asin(setback / left_radius), left_radius * math.acos(setback / left_radius),
         ),
     }
 
-    # stop-bar-side conflict region used by merge_TR and merge_LR
+    # stop-bar-side conflict region used by merge_TR and merge_LR - CURRENTLY INACTIVE
     face_sb_by_lane[lane_id] = {
         "T": (
-            setback + box,
-            junction_t,
+            setback + box, junction_t,
         ),
         "L": (
-            left_radius * math.acos(setback / left_radius),
-            left_distance,
+            left_radius * math.acos(setback / left_radius), left_distance,
         ),
         "R": (
-            right_radius * math.asin(setback / right_radius),
-            right_distance,
+            right_radius * math.asin(setback / right_radius), right_distance,
         ),
     }
 
-    # conflict region used by merge_TL
+    # conflict region used by merge_TL - CURRENTLY INACTIVE
     face_merge_tl_by_lane[lane_id] = {
         "T": (
-            face_main_by_lane[lane_id]["T"][0],
-            junction_t,
+            face_main_by_lane[lane_id]["T"][0], junction_t,
         ),
         "L": (
-            face_main_by_lane[lane_id]["L"][0],
-            left_distance,
+            face_main_by_lane[lane_id]["L"][0], left_distance,
         ),
     }
 
@@ -173,17 +134,61 @@ v_mov = {
     },
 }
 
-
+"""
+buffer is customizable by the lane
+0 - right most lane
+1 - left most lane
+"""
 arrival_buffer = {
-    "I1": {"N": 0.0, "E": 0.0, "S": 0.0, "W": 0.0},
-    "I2": {"N": 0.0, "E": 0.0, "S": 0.0, "W": 0.0},
-    "I3": {"N": 0.0, "E": 0.0, "S": 0.0, "W": 0.0},
-    "I4": {"N": 0.0, "E": 0.0, "S": 0.0, "W": 0.0},
+    "I1": {
+        "N": {0: 0.0, 1: 0.0},
+        "E": {0: 0.0, 1: 0.0},
+        "S": {0: 0.0, 1: 0.0},
+        "W": {0: 0.0, 1: 0.0},
+    },
+    "I2": {
+        "N": {0: 0.0, 1: 0.0},
+        "E": {0: 0.0, 1: 0.0},
+        "S": {0: 0.0, 1: 0.0},
+        "W": {0: 0.0, 1: 0.0},
+    },
+    "I3": {
+        "N": {0: 0.0, 1: 0.0},
+        "E": {0: 0.0, 1: 0.0},
+        "S": {0: 0.0, 1: 0.0},
+        "W": {0: 0.0, 1: 0.0},
+    },
+    "I4": {
+        "N": {0: 0.0, 1: 0.0},
+        "E": {0: 0.0, 1: 0.0},
+        "S": {0: 0.0, 1: 0.0},
+        "W": {0: 0.0, 1: 0.0},
+    },
 }
 
 departure_buffer = {
-    "I1": {"N": 0.0, "E": 0.0, "S": 0.0, "W": 0.0},
-    "I2": {"N": 0.0, "E": 0.0, "S": 0.0, "W": 0.0},
-    "I3": {"N": 0.0, "E": 0.0, "S": 0.0, "W": 0.0},
-    "I4": {"N": 0.0, "E": 0.0, "S": 0.0, "W": 0.0},
+    "I1": {
+        "N": {0: 0.0, 1: 0.0},
+        "E": {0: 0.0, 1: 0.0},
+        "S": {0: 0.0, 1: 0.0},
+        "W": {0: 0.0, 1: 0.0},
+    },
+    "I2": {
+        "N": {0: 0.0, 1: 0.0},
+        "E": {0: 0.0, 1: 0.0},
+        "S": {0: 0.0, 1: 0.0},
+        "W": {0: 0.0, 1: 0.0},
+    },
+    "I3": {
+        "N": {0: 0.0, 1: 0.0},
+        "E": {0: 0.0, 1: 0.0},
+        "S": {0: 0.0, 1: 0.0},
+        "W": {0: 0.0, 1: 0.0},
+    },
+    "I4": {
+        "N": {0: 0.0, 1: 0.0},
+        "E": {0: 0.0, 1: 0.0},
+        "S": {0: 0.0, 1: 0.0},
+        "W": {0: 0.0, 1: 0.0},
+    },
 }
