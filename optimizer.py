@@ -1,6 +1,6 @@
 from gurobipy import GRB, Model, quicksum
 from itertools import combinations
-from vehicles import vehicle
+
 
 import impedance
 import settings
@@ -39,7 +39,6 @@ def vehicle_lane_movement(vehicle: dict, intersection_id: str) -> tuple[int, int
         raise ValueError(f"Vehicle {vehicle['id']} has invalid lane movement {lane_movement} at {intersection_id}")
 
     return lane_movement
-
 
 
 
