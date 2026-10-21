@@ -627,6 +627,151 @@ if __name__ == "__main__":
             "incoming_edge": "E7E",
             "frozen": {}
         },
+        # Third vehicle in each lane: same through routes, 100 m from its next intersection.
+        {
+            "id": 32,
+            "path": ["I1", "I2"],
+            "movements": {"I1": 0, "I2": 0},
+            "lanes": {"I1": 0, "I2": 0},
+            "distance_to_next": 100.0,
+            "incoming_edge": "E0E",
+            "frozen": {}
+        },
+        {
+            "id": 33,
+            "path": ["I1", "I2"],
+            "movements": {"I1": 0, "I2": 0},
+            "lanes": {"I1": 1, "I2": 1},
+            "distance_to_next": 100.0,
+            "incoming_edge": "E0E",
+            "frozen": {}
+        },
+        {
+            "id": 34,
+            "path": ["I1", "I4"],
+            "movements": {"I1": 3, "I4": 3},
+            "lanes": {"I1": 0, "I4": 0},
+            "distance_to_next": 100.0,
+            "incoming_edge": "E1S",
+            "frozen": {}
+        },
+        {
+            "id": 35,
+            "path": ["I1", "I4"],
+            "movements": {"I1": 3, "I4": 3},
+            "lanes": {"I1": 1, "I4": 1},
+            "distance_to_next": 100.0,
+            "incoming_edge": "E1S",
+            "frozen": {}
+        },
+        {
+            "id": 36,
+            "path": ["I2", "I3"],
+            "movements": {"I2": 3, "I3": 3},
+            "lanes": {"I2": 0, "I3": 0},
+            "distance_to_next": 100.0,
+            "incoming_edge": "E2S",
+            "frozen": {}
+        },
+        {
+            "id": 37,
+            "path": ["I2", "I3"],
+            "movements": {"I2": 3, "I3": 3},
+            "lanes": {"I2": 1, "I3": 1},
+            "distance_to_next": 100.0,
+            "incoming_edge": "E2S",
+            "frozen": {}
+        },
+        {
+            "id": 38,
+            "path": ["I2", "I1"],
+            "movements": {"I2": 6, "I1": 6},
+            "lanes": {"I2": 0, "I1": 0},
+            "distance_to_next": 100.0,
+            "incoming_edge": "E3W",
+            "frozen": {}
+        },
+        {
+            "id": 39,
+            "path": ["I2", "I1"],
+            "movements": {"I2": 6, "I1": 6},
+            "lanes": {"I2": 1, "I1": 1},
+            "distance_to_next": 100.0,
+            "incoming_edge": "E3W",
+            "frozen": {}
+        },
+        {
+            "id": 40,
+            "path": ["I3", "I4"],
+            "movements": {"I3": 6, "I4": 6},
+            "lanes": {"I3": 0, "I4": 0},
+            "distance_to_next": 100.0,
+            "incoming_edge": "E4W",
+            "frozen": {}
+        },
+        {
+            "id": 41,
+            "path": ["I3", "I4"],
+            "movements": {"I3": 6, "I4": 6},
+            "lanes": {"I3": 1, "I4": 1},
+            "distance_to_next": 100.0,
+            "incoming_edge": "E4W",
+            "frozen": {}
+        },
+        {
+            "id": 42,
+            "path": ["I3", "I2"],
+            "movements": {"I3": 9, "I2": 9},
+            "lanes": {"I3": 0, "I2": 0},
+            "distance_to_next": 100.0,
+            "incoming_edge": "E5N",
+            "frozen": {}
+        },
+        {
+            "id": 43,
+            "path": ["I3", "I2"],
+            "movements": {"I3": 9, "I2": 9},
+            "lanes": {"I3": 1, "I2": 1},
+            "distance_to_next": 100.0,
+            "incoming_edge": "E5N",
+            "frozen": {}
+        },
+        {
+            "id": 44,
+            "path": ["I4", "I1"],
+            "movements": {"I4": 9, "I1": 9},
+            "lanes": {"I4": 0, "I1": 0},
+            "distance_to_next": 100.0,
+            "incoming_edge": "E6N",
+            "frozen": {}
+        },
+        {
+            "id": 45,
+            "path": ["I4", "I1"],
+            "movements": {"I4": 9, "I1": 9},
+            "lanes": {"I4": 1, "I1": 1},
+            "distance_to_next": 100.0,
+            "incoming_edge": "E6N",
+            "frozen": {}
+        },
+        {
+            "id": 46,
+            "path": ["I4", "I3"],
+            "movements": {"I4": 0, "I3": 0},
+            "lanes": {"I4": 0, "I3": 0},
+            "distance_to_next": 100.0,
+            "incoming_edge": "E7E",
+            "frozen": {}
+        },
+        {
+            "id": 47,
+            "path": ["I4", "I3"],
+            "movements": {"I4": 0, "I3": 0},
+            "lanes": {"I4": 1, "I3": 1},
+            "distance_to_next": 100.0,
+            "incoming_edge": "E7E",
+            "frozen": {}
+        },
     ]
 
     schedule = schedule_arrivals(vehicles=vehicles, t_now=0.0, edge_lane_speeds=edge_lane_speeds)
