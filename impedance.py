@@ -240,12 +240,9 @@ if __name__ == "__main__":
     lane_impedances = update_lane_impedances(edge_lane_speeds)
 
     test_cases = [
-        ( # (movement_id, incoming_lane, outgoing_lane)
-            "I1", 
-            (0, 0, 0),  # WT, lane 0 to lane 0
-            (3, 0, 0),  # NT, lane 0 to lane 0
-        ),
-    ]
+    ("I1", (3, 0, 0), (6, 0, 0)),  # North first, East second lane 0
+    ("I1", (6, 0, 0), (3, 0, 0)),  # East first, North second lane 0
+]
 
     for intersection_id, first, second in test_cases:
         print(f"\nIntersection: {intersection_id}")

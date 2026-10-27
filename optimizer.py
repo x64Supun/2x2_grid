@@ -121,6 +121,15 @@ def schedule_arrivals(vehicles: list[dict], t_now: float, edge_lane_speeds: dict
 
         if next_intersection not in frozen_times:
             # calculates earliest arrival times for the next intersection
+
+            """
+            movement_id = vehicle["movements"][next_intersection]
+            incoming_lane = vehicle["lanes"][next_intersection]
+            approach = road.origins[movement_id]
+
+            arrival_delay = settings.arrival_buffer[next_intersection][approach][incoming_lane]
+            """
+
             earliest_arrival = (t_now + vehicle["distance_to_next"] / settings.v_f)
 
             """
@@ -290,6 +299,7 @@ def schedule_arrivals(vehicles: list[dict], t_now: float, edge_lane_speeds: dict
     
     model.setObjective(gp.quicksum(T.values()), GRB.MINIMIZE)
 
+
     model.optimize()
 
     if model.status != GRB.OPTIMAL:
@@ -337,7 +347,7 @@ if __name__ == "__main__":
             "path": ["I1", "I2"],
             "movements": {"I1": 0, "I2": 0},
             "lanes": {"I1": 1, "I2": 1},
-            "distance_to_next": 40.0,
+            "distance_to_next": 20.0,
             "incoming_edge": "E0E",
             "frozen": {}
         },
@@ -357,8 +367,45 @@ if __name__ == "__main__":
             "path": ["I1", "I4"],
             "movements": {"I1": 3, "I4": 3},
             "lanes": {"I1": 1, "I4": 1},
-            "distance_to_next": 40.0,
+            "distance_to_next": 20.0,
             "incoming_edge": "E1S",
+            "frozen": {}
+        },
+
+        {
+            "id": 48,
+            "path": ["I1"],
+            "movements": {"I1":6},
+            "lanes": {"I1": 0},
+            "distance_to_next": 20.0,
+            "incoming_edge": "E8W",
+            "frozen": {}
+        },
+        {
+            "id": 49,
+            "path": ["I1"],
+            "movements": {"I1":6},
+            "lanes": {"I1": 1},
+            "distance_to_next": 20.0,
+            "incoming_edge": "E8W",
+            "frozen": {}
+        },
+        {
+            "id": 50,
+            "path": ["I1"],
+            "movements": {"I1": 9},
+            "lanes": {"I1": 0},
+            "distance_to_next": 20.0,
+            "incoming_edge": "E11N",
+            "frozen": {}
+        },
+        {
+            "id": 51,
+            "path": ["I1"],
+            "movements": {"I1": 9},
+            "lanes": {"I1": 1},
+            "distance_to_next": 20.0,
+            "incoming_edge": "E11N",
             "frozen": {}
         },
 
@@ -377,7 +424,7 @@ if __name__ == "__main__":
             "path": ["I2", "I3"],
             "movements": {"I2": 3, "I3": 3},
             "lanes": {"I2": 1, "I3": 1},
-            "distance_to_next": 40.0,
+            "distance_to_next": 20.0,
             "incoming_edge": "E2S",
             "frozen": {}
         },
@@ -397,7 +444,7 @@ if __name__ == "__main__":
             "path": ["I2", "I1"],
             "movements": {"I2": 6, "I1": 6},
             "lanes": {"I2": 1, "I1": 1},
-            "distance_to_next": 40.0,
+            "distance_to_next": 20.0,
             "incoming_edge": "E3W",
             "frozen": {}
         },
@@ -417,7 +464,7 @@ if __name__ == "__main__":
             "path": ["I3", "I4"],
             "movements": {"I3": 6, "I4": 6},
             "lanes": {"I3": 1, "I4": 1},
-            "distance_to_next": 40.0,
+            "distance_to_next": 20.0,
             "incoming_edge": "E4W",
             "frozen": {}
         },
@@ -437,7 +484,7 @@ if __name__ == "__main__":
             "path": ["I3", "I2"],
             "movements": {"I3": 9, "I2": 9},
             "lanes": {"I3": 1, "I2": 1},
-            "distance_to_next": 40.0,
+            "distance_to_next": 20.0,
             "incoming_edge": "E5N",
             "frozen": {}
         },
@@ -457,7 +504,7 @@ if __name__ == "__main__":
             "path": ["I4", "I1"],
             "movements": {"I4": 9, "I1": 9},
             "lanes": {"I4": 1, "I1": 1},
-            "distance_to_next": 40.0,
+            "distance_to_next": 20.0,
             "incoming_edge": "E6N",
             "frozen": {}
         },
@@ -477,7 +524,7 @@ if __name__ == "__main__":
             "path": ["I4", "I3"],
             "movements": {"I4": 0, "I3": 0},
             "lanes": {"I4": 1, "I3": 1},
-            "distance_to_next": 40.0,
+            "distance_to_next": 20.0,
             "incoming_edge": "E7E",
             "frozen": {}
         },
@@ -497,7 +544,7 @@ if __name__ == "__main__":
             "path": ["I1", "I2"],
             "movements": {"I1": 0, "I2": 0},
             "lanes": {"I1": 1, "I2": 1},
-            "distance_to_next": 20.0,
+            "distance_to_next": 40.0,
             "incoming_edge": "E0E",
             "frozen": {}
         },
@@ -515,7 +562,7 @@ if __name__ == "__main__":
             "path": ["I1", "I4"],
             "movements": {"I1": 3, "I4": 3},
             "lanes": {"I1": 1, "I4": 1},
-            "distance_to_next": 20.0,
+            "distance_to_next": 40.0,
             "incoming_edge": "E1S",
             "frozen": {}
         },
@@ -533,7 +580,7 @@ if __name__ == "__main__":
             "path": ["I2", "I3"],
             "movements": {"I2": 3, "I3": 3},
             "lanes": {"I2": 1, "I3": 1},
-            "distance_to_next": 20.0,
+            "distance_to_next": 40.0,
             "incoming_edge": "E2S",
             "frozen": {}
         },
@@ -551,7 +598,7 @@ if __name__ == "__main__":
             "path": ["I2", "I1"],
             "movements": {"I2": 6, "I1": 6},
             "lanes": {"I2": 1, "I1": 1},
-            "distance_to_next": 20.0,
+            "distance_to_next": 40.0,
             "incoming_edge": "E3W",
             "frozen": {}
         },
@@ -569,7 +616,7 @@ if __name__ == "__main__":
             "path": ["I3", "I4"],
             "movements": {"I3": 6, "I4": 6},
             "lanes": {"I3": 1, "I4": 1},
-            "distance_to_next": 20.0,
+            "distance_to_next": 40.0,
             "incoming_edge": "E4W",
             "frozen": {}
         },
@@ -587,7 +634,7 @@ if __name__ == "__main__":
             "path": ["I3", "I2"],
             "movements": {"I3": 9, "I2": 9},
             "lanes": {"I3": 1, "I2": 1},
-            "distance_to_next": 20.0,
+            "distance_to_next": 40.0,
             "incoming_edge": "E5N",
             "frozen": {}
         },
@@ -605,7 +652,7 @@ if __name__ == "__main__":
             "path": ["I4", "I1"],
             "movements": {"I4": 9, "I1": 9},
             "lanes": {"I4": 1, "I1": 1},
-            "distance_to_next": 20.0,
+            "distance_to_next": 40.0,
             "incoming_edge": "E6N",
             "frozen": {}
         },
@@ -623,7 +670,7 @@ if __name__ == "__main__":
             "path": ["I4", "I3"],
             "movements": {"I4": 0, "I3": 0},
             "lanes": {"I4": 1, "I3": 1},
-            "distance_to_next": 20.0,
+            "distance_to_next": 40.0,
             "incoming_edge": "E7E",
             "frozen": {}
         },
@@ -774,24 +821,28 @@ if __name__ == "__main__":
         },
     ]
 
+    vehicles = vehicles[:9]
+
     schedule = schedule_arrivals(vehicles=vehicles, t_now=0.0, edge_lane_speeds=edge_lane_speeds)
 
     for vehicle_id, arrivals in schedule.items():
-        displayed_arrivals = {intersection_id: round(arrival_time, 1) for intersection_id, arrival_time in arrivals.items()}
+        displayed_arrivals = {intersection_id: round(arrival_time, 2) for intersection_id, arrival_time in arrivals.items()}
         print(f"vehicle {vehicle_id}: {displayed_arrivals}")
 
     print("\nArrivals by intersection")
+    vehicles_by_id = {vehicle["id"]: vehicle for vehicle in vehicles}
     for intersection_id in road.intersections:
         arrivals_here = []
 
         for vehicle_id, arrivals in schedule.items():
             if intersection_id in arrivals:
                 arrival_time = arrivals[intersection_id]
-                arrivals_here.append((arrival_time, vehicle_id))
+                lane_id = vehicles_by_id[vehicle_id]["lanes"][intersection_id]
+                arrivals_here.append((arrival_time, vehicle_id, lane_id))
 
         print(f"\n{intersection_id}: ")
 
-        for arrival_time, vehicle_id in sorted(arrivals_here):
-            print(f"vehicle {vehicle_id}: {arrival_time:.2f} seconds")
+        for arrival_time, vehicle_id, lane_id in sorted(arrivals_here):
+            print(f"vehicle {vehicle_id}, lane {lane_id}: {arrival_time:.2f} seconds")
 
     #print(f"arrivals for vehicle id 0: ", schedule[0])
