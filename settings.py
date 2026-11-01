@@ -71,35 +71,28 @@ for lane_id in range(number_of_lanes):
 
     # middle 12.8 m conflict square
     face_main_by_lane[lane_id] = {
-        "T": (
-            setback, setback + box,
-        ),
-        "L": (
-            left_radius * math.asin(setback / left_radius), left_radius * math.acos(setback / left_radius),
-        ),
+        "T": (setback, setback + box),
+        "L": (left_radius * math.asin(setback / left_radius), left_radius * math.acos(setback / left_radius)),
     }
+
+    # an inner-lane right turn can pass through the central conflict box.
+    right_main_enter = right_radius * math.asin(setback / right_radius)
+    right_main_exit = right_radius * math.acos(setback / right_radius)
+
+    if right_main_enter < right_main_exit:
+        face_main_by_lane[lane_id]["R"] = (right_main_enter, right_main_exit)
 
     # stop-bar-side conflict region used by merge_TR and merge_LR - CURRENTLY INACTIVE
     face_sb_by_lane[lane_id] = {
-        "T": (
-            setback + box, junction_t,
-        ),
-        "L": (
-            left_radius * math.acos(setback / left_radius), left_distance,
-        ),
-        "R": (
-            right_radius * math.asin(setback / right_radius), right_distance,
-        ),
+        "T": (setback + box, junction_t),
+        "L": (left_radius * math.acos(setback / left_radius), left_distance),
+        "R": (right_radius * math.asin(setback / right_radius), right_distance),
     }
 
     # conflict region used by merge_TL - CURRENTLY INACTIVE
     face_merge_tl_by_lane[lane_id] = {
-        "T": (
-            face_main_by_lane[lane_id]["T"][0], junction_t,
-        ),
-        "L": (
-            face_main_by_lane[lane_id]["L"][0], left_distance,
-        ),
+        "T": (face_main_by_lane[lane_id]["T"][0], junction_t),
+        "L": (face_main_by_lane[lane_id]["L"][0], left_distance),
     }
 
 #directions = ("NL", "NT", "NR", "EL", "ET", "ER", "SL", "ST", "SR", "WL", "WT", "WR")

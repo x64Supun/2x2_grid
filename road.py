@@ -68,6 +68,7 @@ from the driver's point of view, the rightmost lane in the direction of travel i
 """
 lane_ids = tuple(range(settings.number_of_lanes))
 
+
 right_lane = lane_ids[0]
 left_lane = lane_ids[-1]
 
@@ -208,13 +209,15 @@ turns = {
 }
 
 """
-until lane change logic is cleared, movements will be restricted to through "T" movements
+Both lanes may perform left, through, and right movements.
+A vehicle preserves its lane number while crossing the intersection.
 """
-# movement IDs that represent through movements; 0, 3, 6, 9
+
 through_movements = tuple(movement_id for movement_id in settings.directions if turns[movement_id] == "T")
 
-# two lane versions of every through movement.
-lane_movements = tuple((movement_id, lane_id, lane_id) for movement_id in through_movements for lane_id in lane_ids)
+through_lane_movements = tuple((movement_id, lane_id, lane_id) for movement_id in through_movements for lane_id in lane_ids)
+
+lane_movements = tuple((movement_id, lane_id, lane_id) for movement_id in settings.directions for lane_id in lane_ids)
 
 
 
@@ -241,3 +244,5 @@ def lane_junction_distance(movement_id: int, lane_id: int) -> float:
         return settings.junction_r_by_lane[lane_id]
 
     raise ValueError(f"Unknown turn type: {turn}")
+
+

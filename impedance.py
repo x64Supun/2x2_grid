@@ -1,4 +1,4 @@
-"""Lane-aware impedance calculations for the through-only testbed.
+"""Lane-aware impedance calculations for
 
 A lane movement is represented as
 ``(movement_id, incoming_lane, outgoing_lane)``. The earlier movement-only
@@ -10,6 +10,46 @@ import road
 
 
 _origin = {"N": 0, "E": 1, "S": 2, "W": 3}
+
+_MERGE_GROUP = {
+    frozenset(("T", "L")): "merge_TL",
+    frozenset(("T", "R")): "merge_TR",
+    frozenset(("L", "R")): "merge_LR",
+}
+
+
+_SAME_APPROACH_CROSS = {
+    frozenset((("R", 1), ("T", 0))),
+    frozenset((("R", 1), ("L", 0))),
+    frozenset((("L", 0), ("T", 1))),
+}
+
+# different-approach paths that cross inside the central conflict box.
+_CENTRAL_CROSS_PAIRS = {
+    # Through lane 0 × right turn lane 1
+    frozenset(((0, 0, 0), (8, 1, 1))),   # WT0 × SR1
+    frozenset(((3, 0, 0), (11, 1, 1))),  # NT0 × WR1
+    frozenset(((6, 0, 0), (2, 1, 1))),   # ET0 × NR1
+    frozenset(((9, 0, 0), (5, 1, 1))),   # ST0 × ER1
+
+    # Left turn lane 0 × right turn lane 1
+    frozenset(((1, 0, 0), (5, 1, 1))),   # WL0 × ER1
+    frozenset(((4, 0, 0), (8, 1, 1))),   # NL0 × SR1
+    frozenset(((10, 0, 0), (2, 1, 1))),  # SL0 × NR1
+    frozenset(((7, 0, 0), (11, 1, 1))),  # EL0 × WR1
+
+    # Opposing left turns, both in lane 0
+    frozenset(((1, 0, 0), (7, 0, 0))),   # WL0 × EL0
+    frozenset(((4, 0, 0), (10, 0, 0))),  # NL0 × SL0
+}
+
+# adjacent through-left combinations whose lane-preserving paths do not cross.
+_TL_ADJ_NO_CONFLICT_PAIRS = {
+    frozenset(((0, 0, 0), (4, 1, 1))),   # WT0 × NL1
+    frozenset(((3, 0, 0), (1, 1, 1))),   # NT0 × WL1
+    frozenset(((6, 0, 0), (10, 1, 1))),  # ET0 × SL1
+    frozenset(((9, 0, 0), (7, 1, 1))),   # ST0 × EL1
+}
 
 def _speed(v: float) -> float:
     return max(float(v), settings.min_v)
@@ -27,20 +67,54 @@ def lane_group(first: tuple[int, int, int], second: tuple[int, int, int]) -> str
     if second not in road.lane_movements:
         raise ValueError(f"Inactive lane movement: {second}")
 
-    first_movement, first_in_lane, _first_out_lane = first
-    second_movement, second_in_lane, _second_out_lane = second
+    first_movement, first_in_lane, first_out_lane = first
+    second_movement, second_in_lane, second_out_lane = second
 
     first_origin = road.origins[first_movement]
     second_origin = road.origins[second_movement]
 
+    first_destination = road.destinations[first_movement]
+    second_destination = road.destinations[second_movement]
+
+    first_turn = road.turns[first_movement]
+    second_turn = road.turns[second_movement]
+    turn_pair = frozenset((first_turn, second_turn))
+
     if first_origin == second_origin:
         if first_in_lane == second_in_lane:
             return "same_lane_approach"
+
+        same_approach_pair = frozenset(((first_turn, first_in_lane), (second_turn, second_in_lane)))
+
+        if same_approach_pair in _SAME_APPROACH_CROSS:
+            return "same_approach_cross"
+
+        return "no"
+
+    if first_destination == second_destination:
+        if first_out_lane == second_out_lane:
+            return _MERGE_GROUP[turn_pair]
+
+    if frozenset((first, second)) in _CENTRAL_CROSS_PAIRS:
+        return "central_cross"
+
+    if frozenset((first, second)) in _TL_ADJ_NO_CONFLICT_PAIRS:
         return "no"
 
     opposite = ( _origin[first_origin] - _origin[second_origin]) % 4 == 2
 
-    return "no" if opposite else "TT"
+    # central conflict-zone interactions.
+    if turn_pair == frozenset(("T",)):
+        return "no" if opposite else "TT"
+
+    if turn_pair == frozenset(("L",)):
+        return "no" if opposite else "LL"
+
+    if turn_pair == frozenset(("T", "L")):
+        return "TL_opp" if opposite else "TL_adj"
+
+    # non-merging right-turn pairs do not enter the central conflict area.
+    return "no"
 
 
 """
@@ -59,10 +133,20 @@ def lane_distance(first: tuple[int, int, int], second: tuple[int, int, int]) -> 
         return None
 
     first_turn = road.turns[first_movement]
-    second_turn = road.turns[second_movement]
+    second_turn = road.turns[second_movement]   
 
-    _first_enter, first_exit = settings.face_main_by_lane[first_lane][first_turn]
-    second_enter, _second_exit = settings.face_main_by_lane[second_lane][second_turn]
+    if interaction == "merge_TL":
+        conflict_box = settings.face_merge_tl_by_lane
+
+    elif interaction in ("merge_TR", "merge_LR"):
+        conflict_box = settings.face_sb_by_lane
+
+    else:
+        # TT, LL, TL_adj, and TL_opp use the central conflict box.
+        conflict_box = settings.face_main_by_lane
+
+    _first_enter, first_exit = conflict_box[first_lane][first_turn]
+    second_enter, _second_exit = conflict_box[second_lane][second_turn]
 
     return first_exit, second_enter
 
@@ -239,10 +323,13 @@ if __name__ == "__main__":
     lane_speeds = network_lane_movement_speeds(edge_lane_speeds)
     lane_impedances = update_lane_impedances(edge_lane_speeds)
 
-    test_cases = [
-    ("I1", (3, 0, 0), (6, 0, 0)),  # North first, East second lane 0
-    ("I1", (6, 0, 0), (3, 0, 0)),  # East first, North second lane 0
-]
+    test_cases = []
+
+    for pair in _CENTRAL_CROSS_PAIRS:
+        first, second = tuple(pair)
+
+        test_cases.append(("I1", first, second))
+        test_cases.append(("I1", second, first))
 
     for intersection_id, first, second in test_cases:
         print(f"\nIntersection: {intersection_id}")
@@ -273,7 +360,7 @@ if __name__ == "__main__":
             lane_impedances[intersection_id][first][second],
         )
 
-    for intersection_id in ["I1"]:
+    for intersection_id in []:
         print(f"\nImpedance matrix for {intersection_id}")
         print("Rows: first lane movement; columns: second lane movement")
 
